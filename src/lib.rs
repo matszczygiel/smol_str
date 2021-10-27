@@ -94,11 +94,6 @@ impl SmolStr {
     }
 
     #[inline(always)]
-    pub fn to_string(&self) -> String {
-        self.as_str().to_string()
-    }
-
-    #[inline(always)]
     pub fn len(&self) -> usize {
         self.0.len()
     }
@@ -110,10 +105,7 @@ impl SmolStr {
 
     #[inline(always)]
     pub fn is_heap_allocated(&self) -> bool {
-        match self.0 {
-            Repr::Heap(..) => true,
-            _ => false,
-        }
+        matches!(self.0, Repr::Heap(..))
     }
 
     fn from_char_iter<I: iter::Iterator<Item = char>>(mut iter: I) -> SmolStr {
@@ -264,7 +256,7 @@ where
         if size + len > INLINE_CAP {
             let mut heap = String::with_capacity(size + len);
             heap.push_str(std::str::from_utf8(&buf[..len]).unwrap());
-            heap.push_str(&slice);
+            heap.push_str(slice);
             heap.extend(iter);
             return SmolStr(Repr::Heap(heap.into_boxed_str().into()));
         }
@@ -506,5 +498,20 @@ mod serde {
         {
             smol_str(deserializer)
         }
+    }
+}
+
+#[cfg(feature = "schemars")]
+impl schemars::JsonSchema for SmolStr {
+    fn is_referenceable() -> bool {
+        str::is_referenceable()
+    }
+
+    fn schema_name() -> String {
+        str::schema_name()
+    }
+
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        str::json_schema(gen)
     }
 }
