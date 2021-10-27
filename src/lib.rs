@@ -515,3 +515,50 @@ impl schemars::JsonSchema for SmolStr {
         str::json_schema(gen)
     }
 }
+
+#[cfg(feature = "postgres")]
+mod postgres {
+    use std::error::Error;
+
+    use super::*;
+    use postgres_types::{private::BytesMut, FromSql, IsNull, ToSql, Type};
+
+    impl<'a> FromSql<'a> for SmolStr {
+        fn from_sql(ty: &Type, raw: &'a [u8]) -> Result<Self, Box<dyn Error + Sync + Send>> {
+            let s = <&'a str as FromSql<'a>>::from_sql(ty, raw)?;
+            Ok(SmolStr::from(s))
+        }
+
+        fn accepts(ty: &Type) -> bool {
+            <&'a str as FromSql<'a>>::accepts(ty)
+        }
+    }
+
+    impl ToSql for SmolStr {
+        fn to_sql(
+            &self,
+            ty: &Type,
+            out: &mut BytesMut,
+        ) -> Result<IsNull, Box<dyn Error + Sync + Send>>
+        where
+            Self: Sized,
+        {
+            self.as_str().to_sql(ty, out)
+        }
+
+        fn accepts(ty: &Type) -> bool
+        where
+            Self: Sized,
+        {
+            <&str as ToSql>::accepts(ty)
+        }
+
+        fn to_sql_checked(
+            &self,
+            ty: &Type,
+            out: &mut BytesMut,
+        ) -> Result<IsNull, Box<dyn Error + Sync + Send>> {
+            self.as_str().to_sql_checked(ty, out)
+        }
+    }
+}
