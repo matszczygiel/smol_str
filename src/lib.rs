@@ -562,3 +562,26 @@ mod postgres {
         }
     }
 }
+
+#[cfg(feature = "sqlx-postgres")]
+mod sqlx {
+
+    use ::sqlx::{Database, Encode, Postgres, Type};
+
+    use super::*;
+
+    impl Type<Postgres> for SmolStr {
+        fn type_info() -> <Postgres as Database>::TypeInfo {
+            <String as Type<Postgres>>::type_info()
+        }
+    }
+
+    impl<'q> Encode<'q, Postgres> for SmolStr {
+        fn encode_by_ref(
+            &self,
+            buf: &mut <Postgres as ::sqlx::database::HasArguments<'q>>::ArgumentBuffer,
+        ) -> ::sqlx::encode::IsNull {
+            <&str as sqlx::Encode<sqlx::Postgres>>::encode(self.as_str(), buf)
+        }
+    }
+}
