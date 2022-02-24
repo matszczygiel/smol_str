@@ -566,13 +566,25 @@ mod postgres {
 #[cfg(feature = "sqlx-postgres")]
 mod sqlx {
 
-    use ::sqlx::{Database, Encode, Postgres, Type};
+    use ::sqlx::{postgres, Database, Decode, Encode, Postgres, Type};
 
     use super::*;
 
     impl Type<Postgres> for SmolStr {
         fn type_info() -> <Postgres as Database>::TypeInfo {
             <String as Type<Postgres>>::type_info()
+        }
+    }
+
+    impl<'r> Decode<'r, Postgres> for SmolStr
+    where
+        &'r str: Decode<'r, Postgres>,
+    {
+        fn decode(
+            value: postgres::PgValueRef<'r>,
+        ) -> Result<Self, Box<dyn std::error::Error + 'static + Send + Sync>> {
+            let value = <&'r str as Decode<Postgres>>::decode(value)?;
+            Ok(value.into())
         }
     }
 
