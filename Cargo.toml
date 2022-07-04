@@ -11,8 +11,8 @@ edition = "2018"
 serde = { version = "1", optional = true, default_features = false }
 arbitrary = { version = "1", optional = true }
 schemars = { version = "0.8", optional = true }
-postgres-types = { version = "0.2.2", optional = true }
-sqlx = { version = "0.5.11", features = [ "postgres", "runtime-tokio-rustls"], optional = true }
+postgres-types = { version = "0.2", optional = true }
+sqlx = { version = "0.6", features = [ "postgres", "runtime-tokio-rustls"], optional = true }
 
 
 [dev-dependencies]
